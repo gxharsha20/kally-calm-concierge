@@ -1,0 +1,250 @@
+import { useState } from "react";
+import { ArrowLeft, Play, MessageSquare, Video, Clock, CheckCircle2, Phone, Sparkles } from "lucide-react";
+
+const tabs = ["All", "Customer Service", "Bookings", "Social Reminders"] as const;
+const filters = ["Resolved", "In Progress", "Pending Follow-up"] as const;
+
+interface Task {
+  id: number;
+  title: string;
+  handler: string;
+  time: string;
+  status: "Resolved" | "In Progress" | "Pending";
+  category: string;
+}
+
+const mockTasks: Task[] = [
+  { id: 1, title: "Fix Xfinity WiFi outage", handler: "Emily", time: "Yesterday", status: "Resolved", category: "Customer Service" },
+  { id: 2, title: "Amazon return for headphones", handler: "Emily", time: "Today", status: "In Progress", category: "Customer Service" },
+  { id: 3, title: "Book dentist appointment", handler: "Emily", time: "2 days ago", status: "Pending", category: "Bookings" },
+  { id: 4, title: "Reschedule flight to NYC", handler: "Emily", time: "3 days ago", status: "Resolved", category: "Bookings" },
+  { id: 5, title: "Birthday gift for Mom", handler: "Emily", time: "This week", status: "Pending", category: "Social Reminders" },
+];
+
+const statusColor: Record<string, string> = {
+  Resolved: "bg-kally-success text-primary-foreground",
+  "In Progress": "bg-kally-info text-primary-foreground",
+  Pending: "bg-kally-pending text-primary-foreground",
+};
+
+const detailTabs = ["Summary", "Transcript", "Voice", "Video", "Follow-ups"] as const;
+
+export default function Tasks() {
+  const [activeTab, setActiveTab] = useState<typeof tabs[number]>("All");
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [detailTab, setDetailTab] = useState<typeof detailTabs[number]>("Summary");
+
+  const filtered = mockTasks.filter(t => {
+    if (activeTab !== "All" && t.category !== activeTab) return false;
+    if (activeFilter === "Resolved" && t.status !== "Resolved") return false;
+    if (activeFilter === "In Progress" && t.status !== "In Progress") return false;
+    if (activeFilter === "Pending Follow-up" && t.status !== "Pending") return false;
+    return true;
+  });
+
+  if (selectedTask) {
+    return (
+      <div className="max-w-3xl mx-auto animate-fade-in">
+        <button onClick={() => setSelectedTask(null)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6">
+          <ArrowLeft className="w-4 h-4" /> Back to Tasks
+        </button>
+
+        <div className="bg-card rounded-2xl shadow-card p-6 mb-4">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">{selectedTask.title}</h2>
+              <p className="text-sm text-muted-foreground mt-1">Handled by {selectedTask.handler} · {selectedTask.time}</p>
+            </div>
+            <span className={`px-3 py-1 rounded-lg text-xs font-semibold ${statusColor[selectedTask.status]}`}>
+              {selectedTask.status}
+            </span>
+          </div>
+
+          {/* Timeline */}
+          <div className="flex items-center gap-2 mb-6">
+            {["Created", "Called", selectedTask.status].map((step, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span className="px-3 py-1 rounded-lg bg-muted text-xs font-medium text-foreground">{step}</span>
+                {i < 2 && <div className="w-6 h-px bg-border" />}
+              </div>
+            ))}
+          </div>
+
+          {/* Detail Tabs */}
+          <div className="flex gap-1 border-b border-border mb-5">
+            {detailTabs.map(tab => (
+              <button
+                key={tab}
+                onClick={() => setDetailTab(tab)}
+                className={`px-4 py-2.5 text-sm font-medium rounded-t-xl transition-colors ${
+                  detailTab === tab ? "text-foreground bg-muted" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab Content */}
+          <div className="animate-fade-in">
+            {detailTab === "Summary" && (
+              <div className="space-y-3">
+                <p className="text-sm text-foreground leading-relaxed">
+                  Emily contacted Xfinity support regarding the WiFi outage reported at your home. After a 12-minute call, the issue was identified as a regional node problem.
+                </p>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2 text-sm"><CheckCircle2 className="w-4 h-4 text-kally-success mt-0.5 shrink-0" /> Service ticket #XF-29481 created</li>
+                  <li className="flex items-start gap-2 text-sm"><CheckCircle2 className="w-4 h-4 text-kally-success mt-0.5 shrink-0" /> Technician scheduled for tomorrow 2-4 PM</li>
+                  <li className="flex items-start gap-2 text-sm"><CheckCircle2 className="w-4 h-4 text-kally-success mt-0.5 shrink-0" /> $15 credit applied to account</li>
+                </ul>
+              </div>
+            )}
+            {detailTab === "Transcript" && (
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {[
+                  { speaker: "Emily", text: "Hi, I'm calling about a WiFi outage at the account for John Martinez." },
+                  { speaker: "Support", text: "I can see the account. Let me check the service status in your area." },
+                  { speaker: "Support", text: "It looks like there's a known issue affecting your node. We can schedule a technician." },
+                  { speaker: "Emily", text: "That would be great. What's the earliest availability?" },
+                  { speaker: "Support", text: "Tomorrow between 2 and 4 PM. I'll also apply a $15 courtesy credit." },
+                  { speaker: "Emily", text: "Perfect, thank you for the help." },
+                ].map((msg, i) => (
+                  <div key={i} className={`flex gap-3 ${msg.speaker === "Emily" ? "" : "flex-row-reverse"}`}>
+                    <div className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm ${
+                      msg.speaker === "Emily" ? "gradient-emily text-foreground" : "bg-muted text-foreground"
+                    }`}>
+                      <span className="text-xs font-semibold block mb-1 text-muted-foreground">{msg.speaker}</span>
+                      {msg.text}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {detailTab === "Voice" && (
+              <div className="flex items-center gap-4 p-5 rounded-xl bg-muted">
+                <button className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center text-primary-foreground hover:scale-105">
+                  <Play className="w-5 h-5 ml-0.5" />
+                </button>
+                <div className="flex-1">
+                  <div className="flex items-center gap-0.5 h-8">
+                    {Array.from({ length: 40 }).map((_, i) => (
+                      <div key={i} className="w-1 rounded-full bg-primary/40" style={{ height: `${8 + Math.random() * 20}px` }} />
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Generated by MiniMax</p>
+                </div>
+                <span className="text-sm text-muted-foreground font-mono">2:34</span>
+              </div>
+            )}
+            {detailTab === "Video" && (
+              <div className="rounded-xl bg-foreground/5 aspect-video flex items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-t from-foreground/20 to-transparent" />
+                <button className="w-14 h-14 rounded-full bg-primary-foreground/90 flex items-center justify-center shadow-elevated z-10 hover:scale-105">
+                  <Play className="w-6 h-6 text-foreground ml-0.5" />
+                </button>
+                <p className="absolute bottom-4 left-4 text-xs text-primary-foreground/80 z-10">Visual instructions recap</p>
+              </div>
+            )}
+            {detailTab === "Follow-ups" && (
+              <div className="space-y-3">
+                {[
+                  { text: "Emily scheduled a technician for tomorrow 2-4 PM", time: "Yesterday 3:45 PM", icon: CheckCircle2 },
+                  { text: "Waiting for confirmation email from Xfinity", time: "Yesterday 4:00 PM", icon: Clock },
+                  { text: "Auto-followup set for tomorrow morning", time: "Scheduled", icon: Sparkles },
+                ].map((f, i) => (
+                  <div key={i} className="flex items-start gap-3 p-3 rounded-xl hover:bg-muted/50">
+                    <f.icon className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm text-foreground">{f.text}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{f.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Quick actions */}
+        <div className="flex gap-2">
+          <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card shadow-soft text-sm font-medium text-foreground hover:shadow-card">
+            <Phone className="w-4 h-4" /> Call again
+          </button>
+          <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card shadow-soft text-sm font-medium text-foreground hover:shadow-card">
+            <Sparkles className="w-4 h-4 text-primary" /> Ask Emily
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto animate-fade-in">
+      <h1 className="text-2xl font-semibold text-foreground mb-6">Tasks</h1>
+
+      {/* Tabs */}
+      <div className="flex gap-1 mb-4">
+        {tabs.map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+              activeTab === tab ? "bg-card shadow-soft text-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-2 mb-6">
+        {filters.map(f => (
+          <button
+            key={f}
+            onClick={() => setActiveFilter(activeFilter === f ? null : f)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+              activeFilter === f
+                ? "border-primary bg-primary/10 text-foreground"
+                : "border-border text-muted-foreground hover:border-primary/30"
+            }`}
+          >
+            {f}
+          </button>
+        ))}
+      </div>
+
+      {/* Task List */}
+      <div className="space-y-2">
+        {filtered.map(task => (
+          <div
+            key={task.id}
+            onClick={() => { setSelectedTask(task); setDetailTab("Summary"); }}
+            className="group flex items-center justify-between p-4 rounded-xl bg-card shadow-soft hover:shadow-card transition-all cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <div className={`w-2 h-2 rounded-full ${
+                task.status === "Resolved" ? "bg-kally-success" :
+                task.status === "In Progress" ? "bg-kally-info" : "bg-kally-pending"
+              }`} />
+              <div>
+                <p className="text-sm font-medium text-foreground">{task.title}</p>
+                <p className="text-xs text-muted-foreground">Handled by {task.handler} · {task.time}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${statusColor[task.status]}`}>
+                {task.status}
+              </span>
+              <div className="hidden group-hover:flex items-center gap-1">
+                <button className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"><MessageSquare className="w-3.5 h-3.5" /></button>
+                <button className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"><Phone className="w-3.5 h-3.5" /></button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
