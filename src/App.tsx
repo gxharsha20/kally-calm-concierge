@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
+import { TaskProvider } from "@/context/TaskContext";
 import Home from "./pages/Home";
 import Tasks from "./pages/Tasks";
 import Threads from "./pages/Threads";
@@ -17,6 +18,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <TaskProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
@@ -30,6 +32,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+      </TaskProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
