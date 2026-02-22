@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import Home from "./pages/Home";
 import Tasks from "./pages/Tasks";
-import CalendarPage from "./pages/CalendarPage";
 import Threads from "./pages/Threads";
 import Chat from "./pages/Chat";
 import Insights from "./pages/Insights";
@@ -24,7 +23,6 @@ const App = () => (
         <Routes>
           <Route path="/" element={<AppLayout><Home /></AppLayout>} />
           <Route path="/tasks" element={<AppLayout><Tasks /></AppLayout>} />
-          <Route path="/calendar" element={<AppLayout><CalendarPage /></AppLayout>} />
           <Route path="/threads" element={<AppLayout><Threads /></AppLayout>} />
           <Route path="/chat" element={<AppLayout><Chat /></AppLayout>} />
           <Route path="/insights" element={<AppLayout><Insights /></AppLayout>} />
